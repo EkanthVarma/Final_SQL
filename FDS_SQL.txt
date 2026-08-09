@@ -1,0 +1,492 @@
+mysql> create database food_delivery_system;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> use food_delivery_system;
+Database changed
+
+mysql> CREATE TABLE Customers (
+    ->     customer_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     name VARCHAR(50) NOT NULL,
+    ->     phone VARCHAR(15) UNIQUE NOT NULL,
+    ->     email VARCHAR(50) UNIQUE,
+    ->     address VARCHAR(200)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> 
+mysql> CREATE TABLE Restaurants (
+    ->     restaurant_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     name VARCHAR(50) NOT NULL,
+    ->     cuisine_type VARCHAR(30),
+    ->     rating DECIMAL(2,1) DEFAULT 0.0,
+    ->     address VARCHAR(200)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> 
+mysql> CREATE TABLE MenuItems (
+    ->     item_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     restaurant_id INT,
+    ->     item_name VARCHAR(50) NOT NULL,
+    ->     price DECIMAL(8,2) CHECK (price > 0),
+    ->     category VARCHAR(30),
+    ->     is_available BOOLEAN DEFAULT TRUE,
+    ->     FOREIGN KEY (restaurant_id) REFERENCES Restaurants(restaurant_id)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> 
+mysql> CREATE TABLE DeliveryAgents (
+    ->     agent_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     name VARCHAR(50) NOT NULL,
+    ->     phone VARCHAR(15) UNIQUE,
+    ->     vehicle_type VARCHAR(20),
+    ->     is_available BOOLEAN DEFAULT TRUE
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> 
+mysql> CREATE TABLE Orders (
+    ->     order_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     customer_id INT,
+    ->     restaurant_id INT,
+    ->     agent_id INT,
+    ->     order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ->     status VARCHAR(20) DEFAULT 'Placed' CHECK (status IN ('Placed','Preparing','Out for Delivery','Delivered','Cancelled')),
+    ->     total_amount DECIMAL(10,2) DEFAULT 0,
+    ->     FOREIGN KEY (customer_id) REFERENCES Customers(customer_id),
+    ->     FOREIGN KEY (restaurant_id) REFERENCES Restaurants(restaurant_id),
+    ->     FOREIGN KEY (agent_id) REFERENCES DeliveryAgents(agent_id)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> 
+mysql> CREATE TABLE OrderItems (
+    ->     order_item_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     order_id INT,
+    ->     item_id INT,
+    ->     quantity INT CHECK (quantity > 0),
+    ->     price_at_order DECIMAL(8,2),
+    ->     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+    ->     FOREIGN KEY (item_id) REFERENCES MenuItems(item_id)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> 
+mysql> CREATE TABLE Payments (
+    ->     payment_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     order_id INT,
+    ->     amount DECIMAL(10,2),
+    ->     payment_mode VARCHAR(20) CHECK (payment_mode IN ('UPI','Card','Cash','Wallet')),
+    ->     payment_status VARCHAR(20) DEFAULT 'Pending' CHECK (payment_status IN ('Pending','Success','Failed')),
+    ->     paid_at DATETIME,
+    ->     FOREIGN KEY (order_id) REFERENCES Orders(order_id)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> 
+mysql> CREATE TABLE Ratings (
+    ->     rating_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     order_id INT,
+    ->     customer_id INT,
+    ->     restaurant_id INT,
+    ->     stars INT CHECK (stars BETWEEN 1 AND 5),
+    ->     review TEXT,
+    ->     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+    ->     FOREIGN KEY (customer_id) REFERENCES Customers(customer_id),
+    ->     FOREIGN KEY (restaurant_id) REFERENCES Restaurants(restaurant_id)
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> INSERT INTO Customers (name, phone, email, address) VALUES
+    -> ('Arjun Kumar', '9876543210', 'arjun@gmail.com', 'Bhimavaram'),
+    -> ('Anjali Reddy', '9876543211', 'anjali@gmail.com', 'Vijayawada'),
+    -> ('Rahul Sharma', '9876543212', 'rahul@gmail.com', 'Hyderabad'),
+    -> ('Akhil Varma', '9876543213', 'akhil@gmail.com', 'Visakhapatnam'),
+    -> ('Priya Singh', '9876543214', 'priya@gmail.com', 'Chennai'),
+    -> ('Suresh Kumar', '9876543215', 'suresh@gmail.com', 'Bengaluru'),
+    -> ('Ananya Rao', '9876543216', 'ananya@gmail.com', 'Guntur'),
+    -> ('Kiran Reddy', '9876543217', 'kiran@gmail.com', 'Tirupati');
+Query OK, 8 rows affected (0.03 sec)
+Records: 8  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Restaurants (name, cuisine_type, rating, address) VALUES
+    -> ('Italian Grill', 'Italian', 4.5, 'Bhimavaram'),
+    -> ('Spice Kitchen', 'Indian', 4.2, 'Vijayawada'),
+    -> ('Pizza Palace', 'Italian', 4.7, 'Hyderabad'),
+    -> ('Royal Biryani', 'Indian', 4.3, 'Visakhapatnam'),
+    -> ('Burger Grill', 'American', 4.1, 'Chennai'),
+    -> ('Dragon Wok', 'Chinese', 4.4, 'Bengaluru');
+Query OK, 6 rows affected (0.00 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO MenuItems (restaurant_id, item_name, price, category, is_available) VALUES
+    -> (1, 'Margherita Pizza', 250.00, 'Pizza', TRUE),
+    -> (1, 'Pasta Alfredo', 280.00, 'Pasta', TRUE),
+    -> (1, 'Garlic Bread', 120.00, 'Starter', TRUE),
+    -> 
+    -> (2, 'Paneer Butter Masala', 220.00, 'Main Course', TRUE),
+    -> (2, 'Chicken Curry', 300.00, 'Main Course', TRUE),
+    -> (2, 'Veg Biryani', 180.00, 'Rice', FALSE),
+    -> 
+    -> (3, 'Farmhouse Pizza', 320.00, 'Pizza', TRUE),
+    -> (3, 'Cheese Pizza', 200.00, 'Pizza', TRUE),
+    -> (3, 'Pasta', 250.00, 'Pasta', TRUE),
+    -> 
+    -> (4, 'Chicken Biryani', 280.00, 'Biryani', TRUE),
+    -> (4, 'Mutton Biryani', 350.00, 'Biryani', TRUE),
+    -> (4, 'Chicken 65', 220.00, 'Starter', TRUE),
+    -> 
+    -> (5, 'Chicken Burger', 180.00, 'Burger', TRUE),
+    -> (5, 'Veg Burger', 140.00, 'Burger', TRUE),
+    -> (5, 'French Fries', 100.00, 'Sides', FALSE),
+    -> 
+    -> (6, 'Chicken Noodles', 200.00, 'Noodles', TRUE),
+    -> (6, 'Veg Fried Rice', 180.00, 'Rice', TRUE),
+    -> (6, 'Manchurian', 160.00, 'Starter', TRUE);
+Query OK, 18 rows affected (0.01 sec)
+Records: 18  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO DeliveryAgents (name, phone, vehicle_type, is_available) VALUES
+    -> ('Ravi Kumar', '9000000001', 'Bike', TRUE),
+    -> ('Vijay Rao', '9000000002', 'Bike', TRUE),
+    -> ('Sanjay Singh', '9000000003', 'Scooter', FALSE),
+    -> ('Manoj Kumar', '9000000004', 'Bike', TRUE),
+    -> ('Karthik Reddy', '9000000005', 'Car', TRUE),
+    -> ('Naveen Kumar', '9000000006', 'Bike', FALSE);
+Query OK, 6 rows affected (0.01 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Orders 
+    -> (customer_id, restaurant_id, agent_id, order_date, status, total_amount) VALUES
+    -> (1, 1, 1, '2026-08-01 12:30:00', 'Delivered', 530.00),
+    -> (2, 2, 2, '2026-08-01 13:15:00', 'Delivered', 520.00),
+    -> (3, 3, 3, '2026-08-02 19:30:00', 'Delivered', 570.00),
+    -> (4, 4, 1, '2026-08-02 20:00:00', 'Preparing', 630.00),
+    -> (5, 5, 4, '2026-08-03 18:45:00', 'Delivered', 420.00),
+    -> (6, 6, 5, '2026-08-03 19:15:00', 'Out for Delivery', 540.00),
+    -> (7, 1, 2, '2026-08-04 13:00:00', 'Delivered', 650.00),
+    -> (1, 3, 1, '2026-08-04 20:30:00', 'Delivered', 520.00),
+    -> (2, 4, 4, '2026-08-05 19:45:00', 'Cancelled', 350.00),
+    -> (3, 2, 2, '2026-08-05 14:00:00', 'Delivered', 520.00),
+    -> (4, 5, 5, '2026-08-06 18:30:00', 'Delivered', 500.00),
+    -> (5, 6, 1, '2026-08-06 20:00:00', 'Placed', 360.00);
+Query OK, 12 rows affected (0.01 sec)
+Records: 12  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO OrderItems 
+    -> (order_id, item_id, quantity, price_at_order) VALUES
+    -> (1, 1, 1, 250.00),
+    -> (1, 2, 1, 280.00),
+    -> 
+    -> (2, 4, 1, 220.00),
+    -> (2, 5, 1, 300.00),
+    -> 
+    -> (3, 7, 1, 320.00),
+    -> (3, 9, 1, 250.00),
+    -> 
+    -> (4, 10, 1, 280.00),
+    -> (4, 11, 1, 350.00),
+    -> 
+    -> (5, 13, 1, 180.00),
+    -> (5, 14, 1, 140.00),
+    -> (5, 13, 1, 180.00),
+    -> 
+    -> (6, 16, 1, 200.00),
+    -> (6, 17, 1, 180.00),
+    -> (6, 18, 1, 160.00),
+    -> 
+    -> (7, 1, 1, 250.00),
+    -> (7, 2, 1, 280.00),
+    -> 
+    -> (8, 8, 1, 200.00),
+    -> (8, 9, 1, 250.00),
+    -> 
+    -> (9, 11, 1, 350.00),
+    -> 
+    -> (10, 4, 1, 220.00),
+    -> (10, 5, 1, 300.00),
+    -> 
+    -> (11, 13, 2, 180.00),
+    -> (11, 14, 1, 140.00),
+    -> 
+    -> (12, 16, 1, 200.00),
+    -> (12, 18, 1, 160.00);
+Query OK, 25 rows affected (0.01 sec)
+Records: 25  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Payments 
+    -> (order_id, amount, payment_mode, payment_status, paid_at) VALUES
+    -> (1, 530.00, 'UPI', 'Success', '2026-08-01 12:35:00'),
+    -> (2, 520.00, 'Card', 'Success', '2026-08-01 13:20:00'),
+    -> (3, 570.00, 'UPI', 'Success', '2026-08-02 19:35:00'),
+    -> (4, 630.00, 'Cash', 'Pending', NULL),
+    -> (5, 420.00, 'Wallet', 'Success', '2026-08-03 18:50:00'),
+    -> (6, 540.00, 'UPI', 'Success', '2026-08-03 19:20:00'),
+    -> (7, 650.00, 'Card', 'Success', '2026-08-04 13:05:00'),
+    -> (8, 520.00, 'UPI', 'Success', '2026-08-04 20:35:00'),
+    -> (9, 350.00, 'UPI', 'Failed', NULL),
+    -> (10, 520.00, 'Cash', 'Success', '2026-08-05 14:05:00'),
+    -> (11, 500.00, 'Card', 'Success', '2026-08-06 18:35:00'),
+    -> (12, 360.00, 'Wallet', 'Pending', NULL);
+Query OK, 12 rows affected (0.01 sec)
+Records: 12  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Ratings 
+    -> (order_id, customer_id, restaurant_id, stars, review) VALUES
+    -> (1, 1, 1, 5, 'Excellent food and service'),
+    -> (2, 2, 2, 4, 'Very tasty food'),
+    -> (3, 3, 3, 5, 'Best pizza I have had'),
+    -> (5, 5, 5, 4, 'Good burgers'),
+    -> (7, 7, 1, 5, 'Amazing Italian food'),
+    -> (8, 1, 3, 4, 'Good pizza'),
+    -> (10, 3, 2, 5, 'Excellent biryani'),
+    -> (11, 4, 5, 4, 'Nice burger');
+Query OK, 8 rows affected (0.01 sec)
+Records: 8  Duplicates: 0  Warnings: 0
+
+mysql> -- Easy Level Queries
+mysql> -- 1. Find all restaurants serving 'Italian' cuisine
+mysql> SELECT * FROM Restaurants WHERE cuisine_type = 'Italian';
++---------------+---------------+--------------+--------+------------+
+| restaurant_id | name          | cuisine_type | rating | address    |
++---------------+---------------+--------------+--------+------------+
+|             1 | Italian Grill | Italian      |    4.5 | Bhimavaram |
+|             3 | Pizza Palace  | Italian      |    4.7 | Hyderabad  |
++---------------+---------------+--------------+--------+------------+
+2 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 2. Find all menu items priced between 100 and 300
+mysql> SELECT item_name, price FROM MenuItems WHERE price BETWEEN 100 AND 300;
++----------------------+--------+
+| item_name            | price  |
++----------------------+--------+
+| Margherita Pizza     | 250.00 |
+| Pasta Alfredo        | 280.00 |
+| Garlic Bread         | 120.00 |
+| Paneer Butter Masala | 220.00 |
+| Chicken Curry        | 300.00 |
+| Veg Biryani          | 180.00 |
+| Cheese Pizza         | 200.00 |
+| Pasta                | 250.00 |
+| Chicken Biryani      | 280.00 |
+| Chicken 65           | 220.00 |
+| Chicken Burger       | 180.00 |
+| Veg Burger           | 140.00 |
+| French Fries         | 100.00 |
+| Chicken Noodles      | 200.00 |
+| Veg Fried Rice       | 180.00 |
+| Manchurian           | 160.00 |
++----------------------+--------+
+16 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 3. Find customers whose name starts with 'A'
+mysql> SELECT name, phone FROM Customers WHERE name LIKE 'A%';
++--------------+------------+
+| name         | phone      |
++--------------+------------+
+| Arjun Kumar  | 9876543210 |
+| Anjali Reddy | 9876543211 |
+| Akhil Varma  | 9876543213 |
+| Ananya Rao   | 9876543216 |
++--------------+------------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 4. Find all orders that are either 'Delivered' or 'Cancelled'
+mysql> SELECT * FROM Orders WHERE status = 'Delivered' OR status = 'Cancelled';
++----------+-------------+---------------+----------+---------------------+-----------+--------------+
+| order_id | customer_id | restaurant_id | agent_id | order_date          | status    | total_amount |
++----------+-------------+---------------+----------+---------------------+-----------+--------------+
+|        1 |           1 |             1 |        1 | 2026-08-01 12:30:00 | Delivered |       530.00 |
+|        2 |           2 |             2 |        2 | 2026-08-01 13:15:00 | Delivered |       520.00 |
+|        3 |           3 |             3 |        3 | 2026-08-02 19:30:00 | Delivered |       570.00 |
+|        5 |           5 |             5 |        4 | 2026-08-03 18:45:00 | Delivered |       420.00 |
+|        7 |           7 |             1 |        2 | 2026-08-04 13:00:00 | Delivered |       650.00 |
+|        8 |           1 |             3 |        1 | 2026-08-04 20:30:00 | Delivered |       520.00 |
+|        9 |           2 |             4 |        4 | 2026-08-05 19:45:00 | Cancelled |       350.00 |
+|       10 |           3 |             2 |        2 | 2026-08-05 14:00:00 | Delivered |       520.00 |
+|       11 |           4 |             5 |        5 | 2026-08-06 18:30:00 | Delivered |       500.00 |
++----------+-------------+---------------+----------+---------------------+-----------+--------------+
+9 rows in set (0.00 sec)
+
+mysql> -- Intermediate Level Queries
+mysql> -- 1. Average rating of each restaurant
+mysql> SELECT restaurant_id, AVG(stars) AS avg_rating
+    -> FROM Ratings
+    -> GROUP BY restaurant_id;
++---------------+------------+
+| restaurant_id | avg_rating |
++---------------+------------+
+|             1 |     5.0000 |
+|             2 |     4.5000 |
+|             3 |     4.5000 |
+|             5 |     4.0000 |
++---------------+------------+
+4 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 2. Total number of orders placed by each customer
+mysql> SELECT customer_id, COUNT(order_id) AS total_orders
+    -> FROM Orders
+    -> GROUP BY customer_id;
++-------------+--------------+
+| customer_id | total_orders |
++-------------+--------------+
+|           1 |            2 |
+|           2 |            2 |
+|           3 |            2 |
+|           4 |            2 |
+|           5 |            2 |
+|           6 |            1 |
+|           7 |            1 |
++-------------+--------------+
+7 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 3. Total revenue generated by each restaurant
+mysql> SELECT restaurant_id, SUM(total_amount) AS total_revenue
+    -> FROM Orders
+    -> GROUP BY restaurant_id;
++---------------+---------------+
+| restaurant_id | total_revenue |
++---------------+---------------+
+|             1 |       1180.00 |
+|             2 |       1040.00 |
+|             3 |       1090.00 |
+|             4 |        980.00 |
+|             5 |        920.00 |
+|             6 |        900.00 |
++---------------+---------------+
+6 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 4. Highest priced menu item in each restaurant
+mysql> SELECT restaurant_id, MAX(price) AS highest_price
+    -> FROM MenuItems
+    -> GROUP BY restaurant_id;
++---------------+---------------+
+| restaurant_id | highest_price |
++---------------+---------------+
+|             1 |        280.00 |
+|             2 |        300.00 |
+|             3 |        320.00 |
+|             4 |        350.00 |
+|             5 |        180.00 |
+|             6 |        200.00 |
++---------------+---------------+
+6 rows in set (0.00 sec)
+
+mysql> -- Hard Level Queries
+mysql> -- 1. Restaurant names with their total revenue (JOIN + GROUP BY + ORDER BY)
+mysql> SELECT r.name, SUM(o.total_amount) AS total_revenue
+    -> FROM Restaurants r
+    -> JOIN Orders o ON r.restaurant_id = o.restaurant_id
+    -> GROUP BY r.name
+    -> ORDER BY total_revenue DESC;
++---------------+---------------+
+| name          | total_revenue |
++---------------+---------------+
+| Italian Grill |       1180.00 |
+| Pizza Palace  |       1090.00 |
+| Spice Kitchen |       1040.00 |
+| Royal Biryani |        980.00 |
+| Burger Grill  |        920.00 |
+| Dragon Wok    |        900.00 |
++---------------+---------------+
+6 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 2. Restaurants with average rating above 4 (JOIN + GROUP BY + HAVING)
+mysql> SELECT r.name, AVG(rt.stars) AS avg_rating
+    -> FROM Restaurants r
+    -> JOIN Ratings rt ON r.restaurant_id = rt.restaurant_id
+    -> GROUP BY r.name
+    -> HAVING AVG(rt.stars) > 4
+    -> ORDER BY avg_rating DESC;
++---------------+------------+
+| name          | avg_rating |
++---------------+------------+
+| Italian Grill |     5.0000 |
+| Spice Kitchen |     4.5000 |
+| Pizza Palace  |     4.5000 |
++---------------+------------+
+3 rows in set (0.00 sec)
+
+mysql> 
+mysql> -- 3. Customers who placed more than 3 orders (JOIN + GROUP BY + HAVING)
+mysql> SELECT c.name, COUNT(o.order_id) AS order_count
+    -> FROM Customers c
+    -> JOIN Orders o ON c.customer_id = o.customer_id
+    -> GROUP BY c.name
+    -> HAVING COUNT(o.order_id) > 3
+    -> ORDER BY order_count DESC;
+Empty set (0.00 sec)
+
+mysql> 
+mysql> -- 4. Most ordered item in each restaurant (Window Function: RANK + PARTITION BY)
+mysql> SELECT restaurant_id, item_name, total_qty, rnk
+    -> FROM (
+    ->     SELECT m.restaurant_id, m.item_name,
+    ->            SUM(oi.quantity) AS total_qty,
+    ->            RANK() OVER (PARTITION BY m.restaurant_id ORDER BY SUM(oi.quantity) DESC) AS rnk
+    ->     FROM MenuItems m
+    ->     JOIN OrderItems oi ON m.item_id = oi.item_id
+    ->     GROUP BY m.restaurant_id, m.item_name
+    -> ) ranked
+    -> WHERE rnk = 1;
++---------------+----------------------+-----------+-----+
+| restaurant_id | item_name            | total_qty | rnk |
++---------------+----------------------+-----------+-----+
+|             1 | Margherita Pizza     |         2 |   1 |
+|             1 | Pasta Alfredo        |         2 |   1 |
+|             2 | Paneer Butter Masala |         2 |   1 |
+|             2 | Chicken Curry        |         2 |   1 |
+|             3 | Pasta                |         2 |   1 |
+|             4 | Mutton Biryani       |         2 |   1 |
+|             5 | Chicken Burger       |         4 |   1 |
+|             6 | Chicken Noodles      |         2 |   1 |
+|             6 | Manchurian           |         2 |   1 |
++---------------+----------------------+-----------+-----+
+9 rows in set (0.00 sec)
+
+mysql> -- Example Practice Questions
+mysql> -- EASY QUERY 1:
+mysql> -- This query displays the names, phone numbers, and addresses of customers who live in Bhimavaram using the WHERE clause.
+mysql> 
+mysql> -- EASY QUERY 2:
+mysql> -- This query displays the names and ratings of restaurants whose rating is greater than 4.3 using the WHERE clause with a comparison operator.
+mysql> 
+mysql> -- EASY QUERY 3:
+mysql> -- This query displays the names and prices of menu items whose price is less than 200 using the WHERE clause with a comparison operator.
+mysql> 
+mysql> -- EASY QUERY 4:
+mysql> -- This query displays the names of customers whose names end with the letter 'a' using the LIKE operator in the WHERE clause.
+mysql> 
+mysql> 
+mysql> -- INTERMEDIATE QUERY 1:
+mysql> -- This query calculates the total number of customers in the Customers table using the COUNT aggregate function.
+mysql> 
+mysql> -- INTERMEDIATE QUERY 2:
+mysql> -- This query calculates the average price of menu items for each restaurant using the AVG aggregate function along with the GROUP BY clause.
+mysql> 
+mysql> -- INTERMEDIATE QUERY 3:
+mysql> -- This query displays restaurants that have more than 2 menu items using COUNT, GROUP BY, and HAVING clauses.
+mysql> 
+mysql> -- INTERMEDIATE QUERY 4:
+mysql> -- This query calculates the total amount spent by each customer using the SUM aggregate function, JOIN, and GROUP BY clauses.
+mysql> 
+mysql> 
+mysql> -- HARD QUERY 1:
+mysql> -- This query joins the Customers and Orders tables to calculate the total amount spent by each customer and displays the highest spender first using JOIN, SUM, GROUP BY, and ORDER BY clauses.
+mysql> 
+mysql> -- HARD QUERY 2:
+mysql> -- This query joins the Restaurants and Ratings tables to calculate the average rating of each restaurant and displays restaurants whose average rating is greater than 4.2 using JOIN, AVG, GROUP BY, and HAVING clauses.
+mysql> 
+mysql> -- HARD QUERY 3:
+mysql> -- This query joins the Restaurants and MenuItems tables to find the most expensive menu item in each restaurant using JOIN, MAX, and a subquery.
+mysql> 
+mysql> -- HARD QUERY 4:
+mysql> -- This query joins the Customers and Orders tables to calculate the total spending of each customer and ranks the customers based on their spending using SUM, GROUP BY, and the RANK window function.
